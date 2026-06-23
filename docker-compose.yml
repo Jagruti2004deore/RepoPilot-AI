@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: repolensai-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: repolens_ai
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - repolensai_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d repolens_ai"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  repolensai_postgres:
+
