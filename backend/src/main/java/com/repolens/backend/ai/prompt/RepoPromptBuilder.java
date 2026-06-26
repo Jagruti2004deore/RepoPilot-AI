@@ -60,6 +60,11 @@ public class RepoPromptBuilder {
         return withStructuredResponseRequirements(repositoryQuestionPrompt(repository, files, analysis, question, memoryContext));
     }
 
+    public String structuredRepositoryQuestionPrompt(RepositoryProject repository, List<RepositoryFile> files, Analysis analysis, String question, String memoryContext, String mcpContext) {
+        List<RepositoryFile> matches = topMatches(files, question);
+        return withStructuredResponseRequirements(basePrompt(repository, analysis, question, memoryContext, mcpContext, "Relevant repository files", fileContext(matches)));
+    }
+
     public String structuredRagRepositoryQuestionPrompt(RepositoryProject repository, Analysis analysis, String question, List<RepositorySemanticChunk> chunks) {
         return structuredRagRepositoryQuestionPrompt(repository, analysis, question, chunks, "No previous conversation for this repository.");
     }
@@ -68,7 +73,18 @@ public class RepoPromptBuilder {
         return withStructuredResponseRequirements(ragRepositoryQuestionPrompt(repository, analysis, question, chunks, memoryContext));
     }
 
+    public String structuredRagRepositoryQuestionPrompt(RepositoryProject repository, Analysis analysis, String question, List<RepositorySemanticChunk> chunks, String memoryContext, String mcpContext) {
+        String chunkContext = chunks == null || chunks.isEmpty()
+                ? "No semantic chunks were available. Use repository-level analysis only."
+                : semanticChunkContext(chunks);
+        return withStructuredResponseRequirements(basePrompt(repository, analysis, question, memoryContext, mcpContext, "Semantic repository context", chunkContext));
+    }
+
     private String basePrompt(RepositoryProject repository, Analysis analysis, String question, String memoryContext, String contextHeading, String context) {
+        return basePrompt(repository, analysis, question, memoryContext, "MCP context is disabled.", contextHeading, context);
+    }
+
+    private String basePrompt(RepositoryProject repository, Analysis analysis, String question, String memoryContext, String mcpContext, String contextHeading, String context) {
         return """
                 Repository: %s/%s
                 GitHub URL: %s
@@ -79,6 +95,9 @@ public class RepoPromptBuilder {
                 %s
 
                 Latest analysis:
+                %s
+
+                MCP context:
                 %s
 
                 %s:
@@ -105,6 +124,7 @@ public class RepoPromptBuilder {
                 sanitize(question),
                 sanitize(memoryContext),
                 analysisContext(analysis),
+                sanitize(mcpContext),
                 contextHeading,
                 context
         );

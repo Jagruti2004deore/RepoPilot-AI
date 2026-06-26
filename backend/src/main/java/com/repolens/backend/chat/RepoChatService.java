@@ -15,6 +15,7 @@ import com.repolens.backend.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -63,6 +64,19 @@ public class RepoChatService {
         return RepoChatMessage.from(chatHistoryRepository.save(history));
     }
 
+
+    @Transactional(readOnly = true)
+    public Flux<String> streamQuestion(Long repositoryId, String userEmail, String question) {
+        OwnedRepository owned = getOwnedRepository(repositoryId, userEmail);
+        List<RepositoryFile> files = repositoryFileRepository.findByRepositoryIdOrderByPathAsc(owned.repository().getId());
+        Analysis analysis = analysisRepository.findTopByRepositoryIdOrderByCreatedAtDesc(owned.repository().getId()).orElse(null);
+        String memoryContext = repositoryChatMemoryService.buildMemory(owned.user().getId(), owned.repository().getId());
+        StringBuilder answer = new StringBuilder();
+
+        return repoAiChatService.streamQuestion(owned.repository(), owned.user().getId(), files, analysis, question, memoryContext)
+                .doOnNext(answer::append)
+                .doOnComplete(() -> saveChatHistory(owned, question, answer.toString()));
+    }
     private OwnedRepository getOwnedRepository(Long repositoryId, String userEmail) {
         UserAccount user = userRepository.findByEmailIgnoreCase(userEmail)
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));
@@ -74,6 +88,16 @@ public class RepoChatService {
         return new OwnedRepository(user, repository);
     }
 
+
+    private void saveChatHistory(OwnedRepository owned, String question, String answer) {
+        ChatHistory history = new ChatHistory();
+        history.setUser(owned.user());
+        history.setRepository(owned.repository());
+        history.setQuestion(question.trim());
+        history.setAnswer(answer == null || answer.isBlank() ? "AI stream completed without content." : answer.trim());
+        history.setCreatedAt(Instant.now());
+        chatHistoryRepository.save(history);
+    }
     private String answerQuestion(RepositoryProject repository, List<RepositoryFile> files, Analysis analysis, String question) {
         List<RepositoryFile> matches = topMatches(files, question);
         StringBuilder answer = new StringBuilder();
