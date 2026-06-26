@@ -1,5 +1,6 @@
 package com.repolens.backend.repository;
 
+import com.repolens.backend.analysis.dto.AnalysisHistoryItem;
 import com.repolens.backend.analysis.dto.AnalysisReport;
 import com.repolens.backend.repository.dto.ImportRepositoryRequest;
 import com.repolens.backend.repository.dto.RepositoryFileSummary;
@@ -35,6 +36,11 @@ public class RepositoryController {
     @GetMapping("/{repositoryId}/analysis")
     public AnalysisReport getLatestAnalysis(@PathVariable Long repositoryId, Principal principal) {
         return repositoryImportService.getLatestAnalysis(repositoryId, principal.getName());
+    }
+
+    @GetMapping("/{repositoryId}/analyses")
+    public List<AnalysisHistoryItem> listAnalysisHistory(@PathVariable Long repositoryId, Principal principal) {
+        return repositoryImportService.listAnalysisHistory(repositoryId, principal.getName());
     }
 
     @GetMapping("/{repositoryId}/files")

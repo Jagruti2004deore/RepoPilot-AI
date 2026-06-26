@@ -21,14 +21,20 @@ public class StaticAnalysisService {
         String allPaths = String.join("\n", paths).toLowerCase(Locale.ROOT);
         String allContentLower = files.stream().map(RepositoryFile::getContent).collect(Collectors.joining("\n")).toLowerCase(Locale.ROOT);
 
-        boolean hasControllers = allPaths.contains("controller") || allContentLower.contains("@restcontroller");
-        boolean hasServices = allPaths.contains("service") || allContentLower.contains("@service");
-        boolean hasRepositories = allPaths.contains("repository") || allContentLower.contains("@repository");
-        boolean hasEntities = allPaths.contains("entity") || allPaths.contains("model") || allContentLower.contains("@entity");
-        boolean hasSecurity = allPaths.contains("security") || allContentLower.contains("springsecurity") || allContentLower.contains("securityfilterchain");
-        boolean hasReadme = allPaths.contains("readme.md");
-        boolean hasTests = allPaths.contains("/test/") || allPaths.contains("\\test\\") || allPaths.contains(".test.") || allPaths.contains("spec.");
-        boolean hasCi = allPaths.contains(".github/workflows") || allPaths.contains("gitlab-ci") || allPaths.contains("jenkinsfile");
+        ProjectSignals signals = new ProjectSignals(
+                allPaths.contains("controller") || allContentLower.contains("@restcontroller"),
+                allPaths.contains("service") || allContentLower.contains("@service"),
+                allPaths.contains("repository") || allContentLower.contains("@repository"),
+                allPaths.contains("entity") || allPaths.contains("model") || allContentLower.contains("@entity"),
+                allPaths.contains("security") || allContentLower.contains("springsecurity") || allContentLower.contains("securityfilterchain"),
+                allPaths.contains("readme.md"),
+                allPaths.contains("/test/") || allPaths.contains("\\test\\") || allPaths.contains(".test.") || allPaths.contains("spec."),
+                allPaths.contains(".github/workflows") || allPaths.contains("gitlab-ci") || allPaths.contains("jenkinsfile"),
+                allPaths.contains("docker-compose") || allContentLower.contains("docker compose") || allContentLower.contains("services:"),
+                allPaths.contains(".env.example") || allContentLower.contains("env.example"),
+                allContentLower.contains("screenshot") || allContentLower.contains("demo") || allContentLower.contains("localhost"),
+                allContentLower.contains("deploy") || allContentLower.contains("render") || allContentLower.contains("vercel") || allContentLower.contains("railway")
+        );
 
         for (RepositoryFile file : files) {
             inspectFile(file, findings);
@@ -37,35 +43,52 @@ public class StaticAnalysisService {
         if (files.isEmpty()) {
             findings.add(new Finding("Import", "HIGH", "repository", "No analyzable files imported", "Push source files to GitHub or verify the repository URL and branch."));
         }
-        if (!hasControllers) {
+        if (!signals.controllers()) {
             findings.add(new Finding("Architecture", "MEDIUM", "repository", "No controller/API layer detected", "Add a clear HTTP/API entry layer or document why the project is not API-based."));
         }
-        if (!hasServices) {
+        if (!signals.services()) {
             findings.add(new Finding("Architecture", "MEDIUM", "repository", "No service layer detected", "Keep business logic in services instead of controllers or repositories."));
         }
-        if (!hasReadme) {
+        if (!signals.readme()) {
             findings.add(new Finding("Documentation", "LOW", "README.md", "README not detected", "Add setup, architecture, API, screenshots, and demo instructions."));
         }
-        if (!hasTests) {
+        if (!signals.tests()) {
             findings.add(new Finding("Testing", "MEDIUM", "src/test", "Test files not detected", "Add unit and integration tests for authentication, repository import, and analysis flows."));
         }
-        if (!hasCi && files.size() > 8) {
+        if (!signals.ci() && files.size() > 8) {
             findings.add(new Finding("Delivery", "LOW", ".github/workflows", "CI workflow not detected", "Add a GitHub Actions workflow that builds backend and frontend on every push."));
         }
 
-        double architectureScore = clamp(55 + (hasControllers ? 10 : 0) + (hasServices ? 12 : 0) + (hasRepositories ? 8 : 0) + (hasEntities ? 8 : 0) - count(findings, "Architecture") * 6 - count(findings, "Import") * 10);
-        double securityScore = clamp(82 + (hasSecurity ? 6 : -8) - weighted(findings, "Security"));
+        double architectureScore = clamp(55 + (signals.controllers() ? 10 : 0) + (signals.services() ? 12 : 0) + (signals.repositories() ? 8 : 0) + (signals.entities() ? 8 : 0) - count(findings, "Architecture") * 6 - count(findings, "Import") * 10);
+        double securityScore = clamp(82 + (signals.security() ? 6 : -8) - weighted(findings, "Security"));
         double maintainabilityScore = clamp(84 - weighted(findings, "Maintainability") - count(findings, "Code Quality") * 4 - count(findings, "Scalability") * 3);
-        double documentationScore = clamp((hasReadme ? 78 : 52) + (hasCi ? 5 : 0) - count(findings, "Documentation") * 4);
-        double testingScore = clamp(hasTests ? 72 : 45);
+        double documentationScore = clamp((signals.readme() ? 78 : 52) + (signals.ci() ? 5 : 0) - count(findings, "Documentation") * 4);
+        double testingScore = clamp(signals.tests() ? 72 : 45);
         double overallScore = Math.round((architectureScore + securityScore + maintainabilityScore + documentationScore + testingScore) / 5.0 * 10.0) / 10.0;
 
-        String architecture = architectureReport(project, files, hasControllers, hasServices, hasRepositories, hasEntities, hasCi, findings);
+        double resumeReadinessScore = clamp(52 + files.size() / 2.0 + (signals.readme() ? 10 : 0) + (signals.security() ? 8 : 0) + (signals.docker() ? 6 : 0) + (signals.tests() ? 6 : 0));
+        double interviewReadinessScore = clamp(50 + (signals.controllers() ? 8 : 0) + (signals.services() ? 8 : 0) + (signals.repositories() ? 8 : 0) + (signals.security() ? 10 : 0) + (signals.tests() ? 8 : 0));
+        double githubQualityScore = clamp(45 + (signals.readme() ? 18 : 0) + (signals.envExample() ? 8 : 0) + (signals.demoEvidence() ? 8 : 0) + (signals.ci() ? 8 : 0) + (files.size() > 15 ? 8 : 0));
+        double deploymentReadinessScore = clamp(40 + (signals.docker() ? 18 : 0) + (signals.envExample() ? 14 : 0) + (signals.deploymentNotes() ? 14 : 0) + (signals.ci() ? 8 : 0));
+        double demoReadinessScore = clamp(45 + (overallScore * 0.25) + (signals.readme() ? 10 : 0) + (signals.demoEvidence() ? 10 : 0) + (files.size() > 0 ? 10 : 0));
+        double projectReadinessScore = Math.round((resumeReadinessScore + interviewReadinessScore + githubQualityScore + deploymentReadinessScore + demoReadinessScore) / 5.0 * 10.0) / 10.0;
+
+        String architecture = architectureReport(project, files, signals, findings);
         String codeQuality = codeQualityReport(files, findings);
-        String security = securityReport(hasSecurity, findings);
+        String security = securityReport(signals.security(), findings);
         String recommendations = recommendations(findings);
-        String interview = interviewQuestions(project, hasSecurity, hasControllers, hasServices, hasRepositories, files);
-        String resume = resumeSummary(project, hasSecurity, hasControllers, hasServices, hasRepositories, files);
+        String interview = interviewQuestions(project, signals, files);
+        String interviewAnswers = interviewAnswers(project, signals, files);
+        String vivaQuestions = vivaQuestions(project, signals);
+        String presentationScript = presentationScript(project, files, signals, projectReadinessScore);
+        String architectureExplanation = architectureExplanation(project, files, signals);
+        String readinessChecklist = readinessChecklist(signals);
+        String readinessReport = readinessReport(projectReadinessScore, resumeReadinessScore, interviewReadinessScore, githubQualityScore, deploymentReadinessScore, demoReadinessScore, signals);
+        String resume = resumeSummary(project, signals, files);
+        String resumeBullets = resumeBullets(project, signals, files, projectReadinessScore);
+        String githubProfileTips = githubProfileTips(signals);
+        String readmeSuggestions = readmeSuggestions(project, signals);
+        String projectTitleSuggestions = projectTitleSuggestions(project);
 
         return new StaticAnalysisResult(
                 architectureScore,
@@ -74,11 +97,23 @@ public class StaticAnalysisService {
                 documentationScore,
                 testingScore,
                 overallScore,
+                resumeReadinessScore,
+                interviewReadinessScore,
+                githubQualityScore,
+                deploymentReadinessScore,
+                demoReadinessScore,
+                projectReadinessScore,
                 architecture,
                 codeQuality,
                 security,
                 recommendations,
                 interview,
+                interviewAnswers,
+                vivaQuestions,
+                presentationScript,
+                architectureExplanation,
+                readinessChecklist,
+                readinessReport,
                 resume,
                 findings
         );
@@ -134,15 +169,15 @@ public class StaticAnalysisService {
         return secretWord && !lower.contains("${") && !lower.contains("changeme") && !lower.contains("change-this");
     }
 
-    private String architectureReport(RepositoryProject project, List<RepositoryFile> files, boolean controllers, boolean services, boolean repositories, boolean entities, boolean ci, List<Finding> findings) {
-        String style = controllers && services && repositories ? "Layered MVC architecture" : "Partially layered application";
+    private String architectureReport(RepositoryProject project, List<RepositoryFile> files, ProjectSignals signals, List<Finding> findings) {
+        String style = signals.controllers() && signals.services() && signals.repositories() ? "Layered MVC architecture" : "Partially layered application";
         return "Current architecture: " + style + "\n"
                 + "Repository: " + project.getOwnerName() + "/" + project.getRepositoryName() + "\n"
                 + "Files analyzed: " + files.size() + "\n"
                 + "Tech stack detected: " + techStack(files) + "\n"
                 + "Language breakdown: " + languageBreakdown(files) + "\n"
-                + "Detected layers: " + layerText(controllers, services, repositories, entities) + "\n"
-                + "CI/CD detected: " + (ci ? "yes" : "not yet") + "\n"
+                + "Detected layers: " + layerText(signals) + "\n"
+                + "CI/CD detected: " + (signals.ci() ? "yes" : "not yet") + "\n"
                 + "Main architecture risks: " + summarize(findings, "Architecture");
     }
 
@@ -164,6 +199,40 @@ public class StaticAnalysisService {
                 + "Focus areas: validation, authorization boundaries, secret management, CORS, and safe query construction.";
     }
 
+    private String readinessChecklist(ProjectSignals signals) {
+        return checklistLine(signals.readme(), "README includes setup and feature overview") + "\n"
+                + checklistLine(signals.envExample(), "Environment example is available") + "\n"
+                + checklistLine(signals.tests(), "Tests exist for core behavior") + "\n"
+                + checklistLine(signals.docker(), "Docker or Compose setup is present") + "\n"
+                + checklistLine(signals.ci(), "CI workflow is configured") + "\n"
+                + checklistLine(signals.demoEvidence(), "Demo notes, screenshots, or localhost instructions are documented") + "\n"
+                + checklistLine(signals.deploymentNotes(), "Deployment notes are present") + "\n"
+                + checklistLine(signals.controllers() && signals.services(), "Architecture layers are explainable");
+    }
+
+    private String checklistLine(boolean done, String label) {
+        return (done ? "[DONE] " : "[TODO] ") + label;
+    }
+
+    private String readinessReport(double overall, double resume, double interview, double github, double deployment, double demo, ProjectSignals signals) {
+        return "Project readiness: " + Math.round(overall) + "/100\n"
+                + "Resume readiness: " + Math.round(resume) + "/100\n"
+                + "Interview readiness: " + Math.round(interview) + "/100\n"
+                + "GitHub quality: " + Math.round(github) + "/100\n"
+                + "Deployment readiness: " + Math.round(deployment) + "/100\n"
+                + "Demo readiness: " + Math.round(demo) + "/100\n"
+                + "Next best move: " + nextBestMove(signals);
+    }
+
+    private String nextBestMove(ProjectSignals signals) {
+        if (!signals.readme()) return "Write a professional README with setup, screenshots, and architecture.";
+        if (!signals.envExample()) return "Add .env.example so reviewers can run the project safely.";
+        if (!signals.tests()) return "Add focused tests for the main backend services and API paths.";
+        if (!signals.deploymentNotes()) return "Add deployment notes and environment variable documentation.";
+        if (!signals.ci()) return "Add GitHub Actions to build backend and frontend on every push.";
+        return "Polish the demo script and push final screenshots.";
+    }
+
     private String recommendations(List<Finding> findings) {
         if (findings.isEmpty()) {
             return "No major rule-based issues detected. Add more tests, document architecture decisions, and set up CI next.";
@@ -175,27 +244,121 @@ public class StaticAnalysisService {
                 .collect(Collectors.joining("\n"));
     }
 
-    private String interviewQuestions(RepositoryProject project, boolean security, boolean controllers, boolean services, boolean repositories, List<RepositoryFile> files) {
+    private String interviewQuestions(RepositoryProject project, ProjectSignals signals, List<RepositoryFile> files) {
         List<String> questions = new ArrayList<>();
         questions.add("Explain the architecture of " + project.getRepositoryName() + " and the tradeoffs behind the current layering.");
         questions.add("Which files are the main complexity hotspots and how would you refactor them?");
-        if (controllers) questions.add("How do controllers validate, authorize, and route incoming requests?");
-        if (services) questions.add("What business logic belongs in the service layer, and how is it tested?");
-        if (repositories) questions.add("How does the persistence layer handle queries, pagination, and transaction boundaries?");
-        if (security) questions.add("Explain the authentication and authorization flow in this project.");
+        if (signals.controllers()) questions.add("How do controllers validate, authorize, and route incoming requests?");
+        if (signals.services()) questions.add("What business logic belongs in the service layer, and how is it tested?");
+        if (signals.repositories()) questions.add("How does the persistence layer handle queries, pagination, and transaction boundaries?");
+        if (signals.security()) questions.add("Explain the authentication and authorization flow in this project.");
         if (!files.isEmpty()) questions.add("What would you improve first if the project needed to support 10x more users?");
         return questions.stream().map(question -> "- " + question).collect(Collectors.joining("\n"));
     }
 
-    private String resumeSummary(RepositoryProject project, boolean security, boolean controllers, boolean services, boolean repositories, List<RepositoryFile> files) {
-        List<String> parts = new ArrayList<>();
-        parts.add("GitHub repository import and static code analysis");
-        if (controllers && services && repositories) parts.add("layered REST architecture review");
-        if (security) parts.add("security configuration assessment");
-        parts.add("maintainability scoring across " + files.size() + " files");
-        return "Built RepoLensAI analysis for " + project.getRepositoryName() + " with " + String.join(", ", parts) + ".";
+    private String interviewAnswers(RepositoryProject project, ProjectSignals signals, List<RepositoryFile> files) {
+        return "Q: Explain this project in one minute.\n"
+                + "A: " + project.getRepositoryName() + " is a GitHub project analysis platform. It imports repository files, detects architecture and quality signals, stores analysis history, and turns the result into interview, resume, and demo guidance.\n\n"
+                + "Q: What architecture did you use?\n"
+                + "A: The project is organized as " + layerText(signals) + ". The goal is to keep API handling, business logic, persistence, and security concerns separate so the code is easier to test and explain.\n\n"
+                + "Q: What is the strongest technical part?\n"
+                + "A: The strongest part is the end-to-end analysis workflow: GitHub import, file inventory, static scoring, persisted reports, and re-analysis. It shows backend API design, database modeling, and frontend state handling together.\n\n"
+                + "Q: What would you improve next?\n"
+                + "A: I would add deeper tests, exportable reports, and deployment automation. That would make the project more production-ready and easier to demonstrate.\n\n"
+                + "Q: What files should you discuss in an interview?\n"
+                + "A: Start with the application entry point, repository import service, static analysis service, security configuration, and the main React dashboard. Current hotspots are " + hotspots(files) + ".";
     }
 
+    private String vivaQuestions(RepositoryProject project, ProjectSignals signals) {
+        List<String> questions = new ArrayList<>();
+        questions.add("What problem does " + project.getRepositoryName() + " solve?");
+        questions.add("How does the system import and store GitHub repository files?");
+        questions.add("Why is a layered architecture useful in this project?");
+        questions.add("How are analysis scores calculated?");
+        questions.add("How is user authentication handled?");
+        questions.add("What database tables are required and why?");
+        questions.add("What are the limitations of rule-based static analysis?");
+        questions.add("How would you deploy this project for real users?");
+        if (!signals.tests()) questions.add("Which tests would you add first before final submission?");
+        return questions.stream().map(question -> "- " + question).collect(Collectors.joining("\n"));
+    }
+
+    private String presentationScript(RepositoryProject project, List<RepositoryFile> files, ProjectSignals signals, double readiness) {
+        return "Hi, my project is " + project.getRepositoryName() + ". It is an AI-style project mentor for GitHub repositories. "
+                + "Instead of only showing code issues, it checks whether a project is ready for GitHub, resume, viva, and interviews. "
+                + "The backend imports repository files, stores them in PostgreSQL, runs static analysis rules, and produces architecture, security, maintainability, readiness, and interview reports. "
+                + "The frontend gives a dashboard with scores, file inventory, findings, recommendations, and coaching content. "
+                + "For this analysis, RepoPilot AI reviewed " + files.size() + " files and detected " + layerText(signals) + ". "
+                + "The current project readiness score is " + Math.round(readiness) + " out of 100. "
+                + "The main future scope is deeper analysis history, Markdown/PDF export, deployment, and more language-specific rules.";
+    }
+
+    private String architectureExplanation(RepositoryProject project, List<RepositoryFile> files, ProjectSignals signals) {
+        return "Architecture explanation for " + project.getRepositoryName() + ":\n"
+                + "1. Frontend: React UI handles login, repository import, report viewing, file inventory, and re-analysis actions.\n"
+                + "2. Backend API: Spring Boot controllers expose authentication and repository analysis endpoints.\n"
+                + "3. Service layer: Import and analysis services coordinate GitHub fetching, ownership checks, scoring, and report generation.\n"
+                + "4. Persistence: JPA repositories store users, repositories, files, and analysis records in PostgreSQL.\n"
+                + "5. Security: JWT authentication protects repository and report endpoints.\n"
+                + "Detected layers: " + layerText(signals) + ".\n"
+                + "Files analyzed: " + files.size() + ".";
+    }
+
+    private String resumeSummary(RepositoryProject project, ProjectSignals signals, List<RepositoryFile> files) {
+        List<String> parts = new ArrayList<>();
+        parts.add("GitHub repository import and static code analysis");
+        if (signals.controllers() && signals.services() && signals.repositories()) parts.add("layered REST architecture review");
+        if (signals.security()) parts.add("security configuration assessment");
+        parts.add("project readiness scoring across " + files.size() + " files");
+        parts.add("interview and viva preparation report generation");
+        return "Built RepoPilot AI analysis for " + project.getRepositoryName() + " with " + String.join(", ", parts) + ".";
+    }
+
+    private String resumeBullets(RepositoryProject project, ProjectSignals signals, List<RepositoryFile> files, double readiness) {
+        List<String> bullets = new ArrayList<>();
+        bullets.add("Built RepoPilot AI-style GitHub repository analyzer for " + project.getOwnerName() + "/" + project.getRepositoryName() + " with " + files.size() + " imported files and " + Math.round(readiness) + "/100 project readiness scoring.");
+        bullets.add("Designed static analysis reports covering architecture, security, maintainability, documentation, testing, and interview preparation outputs.");
+        if (signals.controllers() && signals.services()) {
+            bullets.add("Implemented explainable layered architecture review across API, service, persistence, and model boundaries.");
+        }
+        if (signals.security()) {
+            bullets.add("Added security-focused checks for validation, authorization, CORS, secrets, and risky query patterns.");
+        }
+        if (signals.docker()) {
+            bullets.add("Packaged local development with Docker-based PostgreSQL support for repeatable setup.");
+        }
+        return bullets.stream().map(bullet -> "- " + bullet).collect(Collectors.joining("\n"));
+    }
+
+    private String githubProfileTips(ProjectSignals signals) {
+        List<String> tips = new ArrayList<>();
+        tips.add("Pin this project near the top of your GitHub profile with a short description focused on project readiness, code review, and architecture analysis.");
+        tips.add("Add screenshots of the dashboard, readiness checklist, file inventory, and coach sections.");
+        tips.add("Keep the repository topics specific: spring-boot, react, postgres, github-api, static-analysis, portfolio-project.");
+        if (!signals.ci()) tips.add("Add a GitHub Actions build badge after CI is configured.");
+        if (!signals.deploymentNotes()) tips.add("Add a demo link or deployment notes so reviewers can understand how to run it quickly.");
+        return tips.stream().map(tip -> "- " + tip).collect(Collectors.joining("\n"));
+    }
+
+    private String readmeSuggestions(RepositoryProject project, ProjectSignals signals) {
+        List<String> sections = new ArrayList<>();
+        sections.add("Project summary: Explain that RepoPilot AI turns a GitHub repository into architecture, quality, readiness, and interview guidance.");
+        sections.add("Architecture: Include React frontend, Spring Boot API, PostgreSQL persistence, GitHub import, JWT security, and static analysis flow.");
+        sections.add("Run locally: Document Docker Compose, backend Maven command, frontend npm command, and required environment variables.");
+        sections.add("Demo workflow: Register, import " + project.getOwnerName() + "/" + project.getRepositoryName() + ", open analysis, re-analyze, compare history, and copy coach outputs.");
+        if (!signals.tests()) sections.add("Testing: Add a note about planned backend service/API tests and frontend smoke tests.");
+        if (!signals.ci()) sections.add("CI/CD: Add GitHub Actions setup once builds are automated.");
+        return sections.stream().map(section -> "- " + section).collect(Collectors.joining("\n"));
+    }
+
+    private String projectTitleSuggestions(RepositoryProject project) {
+        return List.of(
+                "RepoPilot AI - GitHub Project Readiness Mentor",
+                "RepoPilot AI - Intelligent Code Review and Architecture Coach",
+                project.getRepositoryName() + " powered by RepoPilot AI",
+                "AI-style Project Review Dashboard for Developers"
+        ).stream().map(title -> "- " + title).collect(Collectors.joining("\n"));
+    }
     private String languageBreakdown(List<RepositoryFile> files) {
         if (files.isEmpty()) return "no files imported";
         Map<String, Long> counts = files.stream().collect(Collectors.groupingBy(RepositoryFile::getLanguage, LinkedHashMap::new, Collectors.counting()));
@@ -252,12 +415,12 @@ public class StaticAnalysisService {
         return count;
     }
 
-    private String layerText(boolean controllers, boolean services, boolean repositories, boolean entities) {
+    private String layerText(ProjectSignals signals) {
         List<String> layers = new ArrayList<>();
-        if (controllers) layers.add("controllers");
-        if (services) layers.add("services");
-        if (repositories) layers.add("repositories");
-        if (entities) layers.add("entities/models");
+        if (signals.controllers()) layers.add("controllers");
+        if (signals.services()) layers.add("services");
+        if (signals.repositories()) layers.add("repositories");
+        if (signals.entities()) layers.add("entities/models");
         return layers.isEmpty() ? "no clear application layers" : String.join(", ", layers);
     }
 
@@ -301,5 +464,21 @@ public class StaticAnalysisService {
 
     private double clamp(double score) {
         return Math.max(10, Math.min(100, Math.round(score * 10.0) / 10.0));
+    }
+
+    private record ProjectSignals(
+            boolean controllers,
+            boolean services,
+            boolean repositories,
+            boolean entities,
+            boolean security,
+            boolean readme,
+            boolean tests,
+            boolean ci,
+            boolean docker,
+            boolean envExample,
+            boolean demoEvidence,
+            boolean deploymentNotes
+    ) {
     }
 }

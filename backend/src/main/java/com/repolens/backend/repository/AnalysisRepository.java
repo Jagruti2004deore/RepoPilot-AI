@@ -8,5 +8,7 @@ import java.util.Optional;
 public interface AnalysisRepository extends JpaRepository<Analysis, Long> {
     List<Analysis> findByRepositoryOwnerIdOrderByCreatedAtDesc(Long ownerId);
 
+    List<Analysis> findByRepositoryIdOrderByCreatedAtDesc(Long repositoryId);
+
     Optional<Analysis> findTopByRepositoryIdOrderByCreatedAtDesc(Long repositoryId);
 }

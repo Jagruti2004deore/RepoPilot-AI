@@ -31,6 +31,25 @@ public class Analysis {
     private double documentationScore;
     private double testingScore;
     private double overallScore;
+
+    @Column(nullable = true)
+    private double resumeReadinessScore;
+
+    @Column(nullable = true)
+    private double interviewReadinessScore;
+
+    @Column(nullable = true)
+    private double githubQualityScore;
+
+    @Column(nullable = true)
+    private double deploymentReadinessScore;
+
+    @Column(nullable = true)
+    private double demoReadinessScore;
+
+    @Column(nullable = true)
+    private double projectReadinessScore;
+
     private String status = "PENDING";
     private Instant createdAt = Instant.now();
     private Instant completedAt;
@@ -50,10 +69,27 @@ public class Analysis {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String interviewQuestions = "";
 
+    @Column(columnDefinition = "TEXT")
+    private String interviewAnswers = "";
+
+    @Column(columnDefinition = "TEXT")
+    private String vivaQuestions = "";
+
+    @Column(columnDefinition = "TEXT")
+    private String presentationScript = "";
+
+    @Column(columnDefinition = "TEXT")
+    private String architectureExplanation = "";
+
+    @Column(columnDefinition = "TEXT")
+    private String readinessChecklist = "";
+
+    @Column(columnDefinition = "TEXT")
+    private String readinessReport = "";
+
     @Column(nullable = false, columnDefinition = "TEXT")
     private String resumeSummary = "";
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String findingsText = "";
 }
-

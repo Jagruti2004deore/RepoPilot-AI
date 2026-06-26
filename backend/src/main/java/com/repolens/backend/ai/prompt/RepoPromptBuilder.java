@@ -1,0 +1,151 @@
+package com.repolens.backend.ai.prompt;
+
+import com.repolens.backend.repository.Analysis;
+import com.repolens.backend.repository.RepositoryProject;
+import com.repolens.backend.repository.file.RepositoryFile;
+import org.springframework.stereotype.Component;
+
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@Component
+public class RepoPromptBuilder {
+    private static final int MAX_CONTEXT_FILES = 5;
+    private static final int MAX_CONTENT_CHARS_PER_FILE = 1_600;
+
+    public String systemPrompt() {
+        return """
+                You are RepoPilot AI, a senior Java Spring Boot architect and code-review mentor.
+                Answer using only the provided repository context and latest analysis signals.
+                Be practical, interview-ready, and source-aware.
+                If context is limited, say what should be verified in the code.
+                Do not invent files, dependencies, endpoints, or security behavior.
+                Format the answer with concise sections and relevant file evidence.
+                """;
+    }
+
+    public String repositoryQuestionPrompt(RepositoryProject repository, List<RepositoryFile> files, Analysis analysis, String question) {
+        List<RepositoryFile> matches = topMatches(files, question);
+        return """
+                Repository: %s/%s
+                GitHub URL: %s
+                Default branch: %s
+                User question: %s
+
+                Latest analysis:
+                %s
+
+                Relevant repository files:
+                %s
+
+                Answer requirements:
+                - Start with a direct answer.
+                - Reference specific files when useful.
+                - Include architecture/security/readiness context if relevant.
+                - End with a practical next step.
+                """.formatted(
+                repository.getOwnerName(),
+                repository.getRepositoryName(),
+                repository.getGithubUrl(),
+                repository.getDefaultBranch(),
+                sanitize(question),
+                analysisContext(analysis),
+                fileContext(matches)
+        );
+    }
+
+    private String analysisContext(Analysis analysis) {
+        if (analysis == null) {
+            return "No saved analysis is available yet.";
+        }
+
+        return """
+                Overall score: %s/100
+                Project readiness: %s/100
+                Architecture summary: %s
+                Security summary: %s
+                Top recommendations: %s
+                """.formatted(
+                Math.round(analysis.getOverallScore()),
+                Math.round(analysis.getProjectReadinessScore()),
+                firstLines(analysis.getArchitectureExplanation(), 5),
+                firstLines(analysis.getSecurityReport(), 4),
+                firstLines(analysis.getRecommendations(), 5)
+        );
+    }
+
+    private String fileContext(List<RepositoryFile> files) {
+        if (files.isEmpty()) {
+            return "No matching files were found. Use repository-level analysis only.";
+        }
+
+        return files.stream()
+                .map(file -> """
+                        File: %s
+                        Language: %s
+                        Snippet:
+                        %s
+                        """.formatted(file.getPath(), file.getLanguage(), trimContent(file.getContent())))
+                .collect(Collectors.joining("\n---\n"));
+    }
+
+    private List<RepositoryFile> topMatches(List<RepositoryFile> files, String question) {
+        Set<String> terms = Arrays.stream(question.toLowerCase(Locale.ROOT).split("[^a-z0-9]+"))
+                .filter(term -> term.length() > 2)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        return files.stream()
+                .sorted(Comparator.comparingInt((RepositoryFile file) -> score(file, terms)).reversed()
+                        .thenComparing(RepositoryFile::getPath))
+                .filter(file -> score(file, terms) > 0)
+                .limit(MAX_CONTEXT_FILES)
+                .toList();
+    }
+
+    private int score(RepositoryFile file, Set<String> terms) {
+        String haystack = (file.getPath() + "\n" + file.getLanguage() + "\n" + file.getContent()).toLowerCase(Locale.ROOT);
+        int score = 0;
+        for (String term : terms) {
+            if (file.getPath().toLowerCase(Locale.ROOT).contains(term)) score += 6;
+            if (haystack.contains(term)) score += 2;
+        }
+        String path = file.getPath().toLowerCase(Locale.ROOT);
+        if (path.contains("controller")) score += 2;
+        if (path.contains("service")) score += 2;
+        if (path.contains("security")) score += 2;
+        return score;
+    }
+
+    private String trimContent(String content) {
+        if (content == null || content.isBlank()) {
+            return "No content stored for this file.";
+        }
+        String sanitized = sanitize(content);
+        return sanitized.length() <= MAX_CONTENT_CHARS_PER_FILE
+                ? sanitized
+                : sanitized.substring(0, MAX_CONTENT_CHARS_PER_FILE) + "\n... [truncated for AI context]";
+    }
+
+    private String sanitize(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value
+                .replaceAll("(?i)(password|secret|token|api[_-]?key)\\s*[:=]\\s*[^\\s\\n]+", "$1=[REDACTED]")
+                .trim();
+    }
+
+    private String firstLines(String text, int maxLines) {
+        if (text == null || text.isBlank()) {
+            return "Not available.";
+        }
+        return Arrays.stream(text.split("\\R"))
+                .filter(line -> !line.isBlank())
+                .limit(maxLines)
+                .collect(Collectors.joining("\n"));
+    }
+}

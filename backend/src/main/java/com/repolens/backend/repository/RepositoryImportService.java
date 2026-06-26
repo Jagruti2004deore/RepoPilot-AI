@@ -3,6 +3,7 @@ package com.repolens.backend.repository;
 import com.repolens.backend.analysis.Finding;
 import com.repolens.backend.analysis.StaticAnalysisResult;
 import com.repolens.backend.analysis.StaticAnalysisService;
+import com.repolens.backend.analysis.dto.AnalysisHistoryItem;
 import com.repolens.backend.analysis.dto.AnalysisReport;
 import com.repolens.backend.github.GitHubClient;
 import com.repolens.backend.github.GitHubFile;
@@ -81,6 +82,13 @@ public class RepositoryImportService {
     }
 
     @Transactional(readOnly = true)
+    public List<AnalysisHistoryItem> listAnalysisHistory(Long repositoryId, String userEmail) {
+        RepositoryProject project = getOwnedProject(repositoryId, userEmail);
+        return analysisRepository.findByRepositoryIdOrderByCreatedAtDesc(project.getId()).stream()
+                .map(AnalysisHistoryItem::from)
+                .toList();
+    }
+    @Transactional(readOnly = true)
     public List<RepositoryFileSummary> listRepositoryFiles(Long repositoryId, String userEmail) {
         RepositoryProject project = getOwnedProject(repositoryId, userEmail);
         return repositoryFileRepository.findByRepositoryIdOrderByPathAsc(project.getId()).stream()
@@ -133,11 +141,23 @@ public class RepositoryImportService {
         analysis.setDocumentationScore(result.documentationScore());
         analysis.setTestingScore(result.testingScore());
         analysis.setOverallScore(result.overallScore());
+        analysis.setResumeReadinessScore(result.resumeReadinessScore());
+        analysis.setInterviewReadinessScore(result.interviewReadinessScore());
+        analysis.setGithubQualityScore(result.githubQualityScore());
+        analysis.setDeploymentReadinessScore(result.deploymentReadinessScore());
+        analysis.setDemoReadinessScore(result.demoReadinessScore());
+        analysis.setProjectReadinessScore(result.projectReadinessScore());
         analysis.setArchitectureReport(result.architectureReport());
         analysis.setCodeQualityReport(result.codeQualityReport());
         analysis.setSecurityReport(result.securityReport());
         analysis.setRecommendations(result.recommendations());
         analysis.setInterviewQuestions(result.interviewQuestions());
+        analysis.setInterviewAnswers(result.interviewAnswers());
+        analysis.setVivaQuestions(result.vivaQuestions());
+        analysis.setPresentationScript(result.presentationScript());
+        analysis.setArchitectureExplanation(result.architectureExplanation());
+        analysis.setReadinessChecklist(result.readinessChecklist());
+        analysis.setReadinessReport(result.readinessReport());
         analysis.setResumeSummary(result.resumeSummary());
         analysis.setFindingsText(result.findings().stream().map(this::formatFinding).collect(Collectors.joining("\n")));
         analysis.setStatus("ANALYZED");
