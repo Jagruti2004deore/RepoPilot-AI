@@ -1,5 +1,6 @@
 package com.repolens.backend.ai.prompt;
 
+import com.repolens.backend.ai.rag.RepositorySemanticChunk;
 import com.repolens.backend.repository.Analysis;
 import com.repolens.backend.repository.RepositoryProject;
 import com.repolens.backend.repository.file.RepositoryFile;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
 public class RepoPromptBuilder {
     private static final int MAX_CONTEXT_FILES = 5;
     private static final int MAX_CONTENT_CHARS_PER_FILE = 1_600;
+    private static final int MAX_RAG_CHARS_PER_CHUNK = 1_400;
 
     public String systemPrompt() {
         return """
@@ -31,6 +33,25 @@ public class RepoPromptBuilder {
 
     public String repositoryQuestionPrompt(RepositoryProject repository, List<RepositoryFile> files, Analysis analysis, String question) {
         List<RepositoryFile> matches = topMatches(files, question);
+        return basePrompt(repository, analysis, question, "Relevant repository files", fileContext(matches));
+    }
+
+    public String ragRepositoryQuestionPrompt(RepositoryProject repository, Analysis analysis, String question, List<RepositorySemanticChunk> chunks) {
+        if (chunks == null || chunks.isEmpty()) {
+            return basePrompt(repository, analysis, question, "Semantic repository context", "No semantic chunks were available. Use repository-level analysis only.");
+        }
+        return basePrompt(repository, analysis, question, "Semantic repository context", semanticChunkContext(chunks));
+    }
+
+    public String structuredRepositoryQuestionPrompt(RepositoryProject repository, List<RepositoryFile> files, Analysis analysis, String question) {
+        return withStructuredResponseRequirements(repositoryQuestionPrompt(repository, files, analysis, question));
+    }
+
+    public String structuredRagRepositoryQuestionPrompt(RepositoryProject repository, Analysis analysis, String question, List<RepositorySemanticChunk> chunks) {
+        return withStructuredResponseRequirements(ragRepositoryQuestionPrompt(repository, analysis, question, chunks));
+    }
+
+    private String basePrompt(RepositoryProject repository, Analysis analysis, String question, String contextHeading, String context) {
         return """
                 Repository: %s/%s
                 GitHub URL: %s
@@ -40,7 +61,7 @@ public class RepoPromptBuilder {
                 Latest analysis:
                 %s
 
-                Relevant repository files:
+                %s:
                 %s
 
                 Answer requirements:
@@ -55,8 +76,33 @@ public class RepoPromptBuilder {
                 repository.getDefaultBranch(),
                 sanitize(question),
                 analysisContext(analysis),
-                fileContext(matches)
+                contextHeading,
+                context
         );
+    }
+
+    private String withStructuredResponseRequirements(String prompt) {
+        return prompt + """
+
+                Structured response requirements:
+                Return only valid JSON. Do not wrap the JSON in markdown fences.
+                The JSON must match this shape exactly:
+                {
+                  "directAnswer": "Clear answer in 2 to 4 sentences.",
+                  "keyPoints": ["Important explanation point"],
+                  "evidence": [
+                    {
+                      "filePath": "path/from/provided/context.java",
+                      "reason": "Why this file matters for the answer.",
+                      "excerpt": "Small source-backed clue or summary from the provided snippet."
+                    }
+                  ],
+                  "recommendedNextSteps": ["Practical next action"],
+                  "confidence": "high | medium | low",
+                  "limitation": "What should be manually verified, or empty string if none."
+                }
+                Use evidence only from the provided repository context. If no file evidence is available, return an empty evidence array.
+                """;
     }
 
     private String analysisContext(Analysis analysis) {
@@ -90,7 +136,25 @@ public class RepoPromptBuilder {
                         Language: %s
                         Snippet:
                         %s
-                        """.formatted(file.getPath(), file.getLanguage(), trimContent(file.getContent())))
+                        """.formatted(file.getPath(), file.getLanguage(), trimContent(file.getContent(), MAX_CONTENT_CHARS_PER_FILE)))
+                .collect(Collectors.joining("\n---\n"));
+    }
+
+    private String semanticChunkContext(List<RepositorySemanticChunk> chunks) {
+        return chunks.stream()
+                .map(chunk -> """
+                        File: %s
+                        Language: %s
+                        Chunk: %s
+                        Similarity: %.4f
+                        Snippet:
+                        %s
+                        """.formatted(
+                        chunk.filePath(),
+                        chunk.language(),
+                        chunk.chunkIndex(),
+                        chunk.similarity(),
+                        trimContent(chunk.content(), MAX_RAG_CHARS_PER_CHUNK)))
                 .collect(Collectors.joining("\n---\n"));
     }
 
@@ -120,14 +184,14 @@ public class RepoPromptBuilder {
         return score;
     }
 
-    private String trimContent(String content) {
+    private String trimContent(String content, int maxChars) {
         if (content == null || content.isBlank()) {
             return "No content stored for this file.";
         }
         String sanitized = sanitize(content);
-        return sanitized.length() <= MAX_CONTENT_CHARS_PER_FILE
+        return sanitized.length() <= maxChars
                 ? sanitized
-                : sanitized.substring(0, MAX_CONTENT_CHARS_PER_FILE) + "\n... [truncated for AI context]";
+                : sanitized.substring(0, maxChars) + "\n... [truncated for AI context]";
     }
 
     private String sanitize(String value) {

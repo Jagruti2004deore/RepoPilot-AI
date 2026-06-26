@@ -3,6 +3,7 @@ package com.repolens.backend.repository;
 import com.repolens.backend.analysis.Finding;
 import com.repolens.backend.analysis.StaticAnalysisResult;
 import com.repolens.backend.analysis.StaticAnalysisService;
+import com.repolens.backend.ai.rag.RepositoryEmbeddingIndexer;
 import com.repolens.backend.analysis.dto.AnalysisHistoryItem;
 import com.repolens.backend.analysis.dto.AnalysisReport;
 import com.repolens.backend.github.GitHubClient;
@@ -32,6 +33,7 @@ public class RepositoryImportService {
     private final UserRepository userRepository;
     private final GitHubClient gitHubClient;
     private final StaticAnalysisService staticAnalysisService;
+    private final RepositoryEmbeddingIndexer repositoryEmbeddingIndexer;
 
     @Transactional
     public RepositorySummary importRepository(String githubUrl, String userEmail) {
@@ -54,6 +56,7 @@ public class RepositoryImportService {
                 .map(repositoryFileRepository::save)
                 .toList();
         savedProject.setImportedFileCount(savedFiles.size());
+        repositoryEmbeddingIndexer.indexRepository(savedProject, savedFiles);
 
         Analysis analysis = new Analysis();
         analysis.setRepository(savedProject);
@@ -101,6 +104,7 @@ public class RepositoryImportService {
         RepositoryProject project = getOwnedProject(repositoryId, userEmail);
         List<RepositoryFile> files = repositoryFileRepository.findByRepositoryIdOrderByPathAsc(project.getId());
         project.setImportedFileCount(files.size());
+        repositoryEmbeddingIndexer.indexRepository(project, files);
 
         Analysis analysis = new Analysis();
         analysis.setRepository(project);
