@@ -1,27 +1,30 @@
-# RepoLensAI
+# RepoPilot AI
 
-RepoLensAI is an AI-powered code review and architecture analyzer for GitHub repositories. The product is designed to behave like an AI staff engineer: it imports real source code, evaluates architecture and code quality, highlights security risks, scores project readiness, and prepares interview and resume outputs.
+RepoPilot AI is a full-stack GitHub repository review and project-readiness mentor. It imports real repository files, runs rule-based static analysis, scores architecture/security/maintainability/docs/tests, and turns the result into portfolio, resume, viva, interview, and README guidance.
 
-## Day 1 Status
+## Completed Features
 
-The first-day foundation is complete:
-
-- Spring Boot backend scaffold with Java 21 target
-- JWT authentication foundation
-- PostgreSQL configuration
-- User, repository, analysis, and chat history data models
-- Repository import API skeleton
-- React TypeScript frontend scaffold
-- Dark professional dashboard UI
-- Login/register UI
-- GitHub repository import form
-- Docker Compose database setup with PostgreSQL + PGVector
+- JWT register/login flow
+- GitHub repository import from a public URL
+- PostgreSQL persistence for users, repositories, files, and analysis runs
+- Static analysis for architecture layers, validation, security risks, secrets, logging, TODOs, large files, and pagination hints
+- Scorecards for architecture, security, maintainability, documentation, testing, and overall quality
+- Readiness scorecard for resume, interview, GitHub, deployment, and demo readiness
+- File inventory with role and signal detection
+- Re-analysis from saved repository files
+- Analysis history comparison panel
+- Coach tabs for interview answers, viva prep, presentation script, architecture explanation, resume bullets, GitHub profile tips, README suggestions, and project title ideas
+- Copy buttons for coach/readiness/resume sections
+- Markdown report export from the frontend
+- RepoPilot AI branding across the app UI and browser metadata
+- Light coder-focused product homepage with services and usage diagram
+- Repo-aware Q&A assistant for asking questions about imported code
 
 ## Tech Stack
 
 Backend:
 
-- Java 21
+- Java 21 target
 - Spring Boot 3
 - Spring Security
 - JWT
@@ -35,16 +38,13 @@ Frontend:
 - TypeScript
 - Vite
 - Tailwind CSS
-- React Query
 - Axios
 - Lucide React
 
-AI roadmap:
+Infrastructure:
 
-- Ollama
-- Gemma/Qwen local models
-- Spring AI
-- PGVector RAG pipeline
+- Docker Compose
+- PostgreSQL with pgvector image
 
 ## Project Structure
 
@@ -55,6 +55,8 @@ RepoLens AI/
   docker-compose.yml
   README.md
 ```
+
+The local folder and GitHub repository can still keep the old path name. The product name shown to users is RepoPilot AI.
 
 ## Run Locally
 
@@ -91,25 +93,41 @@ Frontend URL:
 http://localhost:5173
 ```
 
-Backend health URL:
+Backend base URL:
 
 ```text
-http://localhost:8080/api/actuator/health
+http://localhost:8080/api
 ```
 
-## Seven-Day Roadmap
+## Main API Flow
 
-Day 1: project foundation, auth, dashboard shell, repository import skeleton.
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `POST /api/repositories/import`
+- `GET /api/repositories`
+- `GET /api/repositories/{repositoryId}/analysis`
+- `GET /api/repositories/{repositoryId}/analyses`
+- `GET /api/repositories/{repositoryId}/files`
+- `POST /api/repositories/{repositoryId}/reanalyze`
+- `GET /api/repositories/{repositoryId}/chat`
+- `POST /api/repositories/{repositoryId}/chat/ask`
 
-Day 2: GitHub REST API file fetching, repository tree parsing, source file extraction, and analysis history.
+## Verification
 
-Day 3: static code analysis engine for field injection, missing validation, long methods, hardcoded secrets, weak exception handling, and package structure.
+Backend build:
 
-Day 4: Spring AI structured architecture, code quality, security, and scoring reports.
+```powershell
+cd backend
+.\mvnw.cmd -DskipTests package
+```
 
-Day 5: RAG with chunking, embeddings, PGVector, similarity search, and repository-aware chat memory.
+Frontend build:
 
-Day 6: full frontend product experience with analysis pages, score cards, charts, interview questions, resume generator, and AI chat.
+```powershell
+cd frontend
+npm run build
+```
 
-Day 7: tests, polish, screenshots, deployment notes, and interview-ready documentation.
+## Unique Angle
 
+RepoPilot AI is not only a code review dashboard. It acts like a project mentor for students and portfolio builders by combining technical review with interview preparation, resume bullets, README coaching, demo readiness, analysis history comparison, and repo-aware code Q&A in one workflow.
