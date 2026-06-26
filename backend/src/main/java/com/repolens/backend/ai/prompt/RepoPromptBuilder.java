@@ -23,40 +23,60 @@ public class RepoPromptBuilder {
     public String systemPrompt() {
         return """
                 You are RepoPilot AI, a senior Java Spring Boot architect and code-review mentor.
-                Answer using only the provided repository context and latest analysis signals.
+                Answer using only the provided repository context, chat memory, tool results, and latest analysis signals.
                 Be practical, interview-ready, and source-aware.
                 If context is limited, say what should be verified in the code.
                 Do not invent files, dependencies, endpoints, or security behavior.
+                Use backend tools when the question asks about latest analysis, repository files, security findings, architecture score, or improvement plan.
                 Format the answer with concise sections and relevant file evidence.
                 """;
     }
 
     public String repositoryQuestionPrompt(RepositoryProject repository, List<RepositoryFile> files, Analysis analysis, String question) {
+        return repositoryQuestionPrompt(repository, files, analysis, question, "No previous conversation for this repository.");
+    }
+
+    public String repositoryQuestionPrompt(RepositoryProject repository, List<RepositoryFile> files, Analysis analysis, String question, String memoryContext) {
         List<RepositoryFile> matches = topMatches(files, question);
-        return basePrompt(repository, analysis, question, "Relevant repository files", fileContext(matches));
+        return basePrompt(repository, analysis, question, memoryContext, "Relevant repository files", fileContext(matches));
     }
 
     public String ragRepositoryQuestionPrompt(RepositoryProject repository, Analysis analysis, String question, List<RepositorySemanticChunk> chunks) {
+        return ragRepositoryQuestionPrompt(repository, analysis, question, chunks, "No previous conversation for this repository.");
+    }
+
+    public String ragRepositoryQuestionPrompt(RepositoryProject repository, Analysis analysis, String question, List<RepositorySemanticChunk> chunks, String memoryContext) {
         if (chunks == null || chunks.isEmpty()) {
-            return basePrompt(repository, analysis, question, "Semantic repository context", "No semantic chunks were available. Use repository-level analysis only.");
+            return basePrompt(repository, analysis, question, memoryContext, "Semantic repository context", "No semantic chunks were available. Use repository-level analysis only.");
         }
-        return basePrompt(repository, analysis, question, "Semantic repository context", semanticChunkContext(chunks));
+        return basePrompt(repository, analysis, question, memoryContext, "Semantic repository context", semanticChunkContext(chunks));
     }
 
     public String structuredRepositoryQuestionPrompt(RepositoryProject repository, List<RepositoryFile> files, Analysis analysis, String question) {
-        return withStructuredResponseRequirements(repositoryQuestionPrompt(repository, files, analysis, question));
+        return structuredRepositoryQuestionPrompt(repository, files, analysis, question, "No previous conversation for this repository.");
+    }
+
+    public String structuredRepositoryQuestionPrompt(RepositoryProject repository, List<RepositoryFile> files, Analysis analysis, String question, String memoryContext) {
+        return withStructuredResponseRequirements(repositoryQuestionPrompt(repository, files, analysis, question, memoryContext));
     }
 
     public String structuredRagRepositoryQuestionPrompt(RepositoryProject repository, Analysis analysis, String question, List<RepositorySemanticChunk> chunks) {
-        return withStructuredResponseRequirements(ragRepositoryQuestionPrompt(repository, analysis, question, chunks));
+        return structuredRagRepositoryQuestionPrompt(repository, analysis, question, chunks, "No previous conversation for this repository.");
     }
 
-    private String basePrompt(RepositoryProject repository, Analysis analysis, String question, String contextHeading, String context) {
+    public String structuredRagRepositoryQuestionPrompt(RepositoryProject repository, Analysis analysis, String question, List<RepositorySemanticChunk> chunks, String memoryContext) {
+        return withStructuredResponseRequirements(ragRepositoryQuestionPrompt(repository, analysis, question, chunks, memoryContext));
+    }
+
+    private String basePrompt(RepositoryProject repository, Analysis analysis, String question, String memoryContext, String contextHeading, String context) {
         return """
                 Repository: %s/%s
                 GitHub URL: %s
                 Default branch: %s
                 User question: %s
+
+                Conversation memory:
+                %s
 
                 Latest analysis:
                 %s
@@ -64,10 +84,18 @@ public class RepoPromptBuilder {
                 %s:
                 %s
 
+                Available backend tools:
+                - latestAnalysis: use for latest saved scores/status.
+                - repositoryFiles: use for imported file inventory.
+                - securityFindings: use for security issues and security report.
+                - architectureScore: use for architecture score and explanation.
+                - improvementPlan: use for recommendations and next steps.
+
                 Answer requirements:
                 - Start with a direct answer.
                 - Reference specific files when useful.
                 - Include architecture/security/readiness context if relevant.
+                - Use conversation memory for follow-up questions.
                 - End with a practical next step.
                 """.formatted(
                 repository.getOwnerName(),
@@ -75,6 +103,7 @@ public class RepoPromptBuilder {
                 repository.getGithubUrl(),
                 repository.getDefaultBranch(),
                 sanitize(question),
+                sanitize(memoryContext),
                 analysisContext(analysis),
                 contextHeading,
                 context
@@ -101,7 +130,7 @@ public class RepoPromptBuilder {
                   "confidence": "high | medium | low",
                   "limitation": "What should be manually verified, or empty string if none."
                 }
-                Use evidence only from the provided repository context. If no file evidence is available, return an empty evidence array.
+                Use evidence only from the provided repository context or backend tool results. If no file evidence is available, return an empty evidence array.
                 """;
     }
 

@@ -1,6 +1,7 @@
 package com.repolens.backend.chat;
 
 import com.repolens.backend.ai.RepoAiChatService;
+import com.repolens.backend.ai.memory.RepositoryChatMemoryService;
 
 import com.repolens.backend.chat.dto.RepoChatMessage;
 import com.repolens.backend.repository.Analysis;
@@ -33,6 +34,7 @@ public class RepoChatService {
     private final RepositoryFileRepository repositoryFileRepository;
     private final AnalysisRepository analysisRepository;
     private final RepoAiChatService repoAiChatService;
+    private final RepositoryChatMemoryService repositoryChatMemoryService;
 
     @Transactional(readOnly = true)
     public List<RepoChatMessage> listMessages(Long repositoryId, String userEmail) {
@@ -48,7 +50,8 @@ public class RepoChatService {
         List<RepositoryFile> files = repositoryFileRepository.findByRepositoryIdOrderByPathAsc(owned.repository().getId());
         Analysis analysis = analysisRepository.findTopByRepositoryIdOrderByCreatedAtDesc(owned.repository().getId()).orElse(null);
 
-        String answer = repoAiChatService.answerQuestion(owned.repository(), files, analysis, question)
+        String memoryContext = repositoryChatMemoryService.buildMemory(owned.user().getId(), owned.repository().getId());
+        String answer = repoAiChatService.answerQuestion(owned.repository(), owned.user().getId(), files, analysis, question, memoryContext)
                 .orElseGet(() -> answerQuestion(owned.repository(), files, analysis, question));
 
         ChatHistory history = new ChatHistory();
