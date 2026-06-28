@@ -1,4 +1,4 @@
-﻿import { Clipboard, FileCode2, History, LayoutDashboard, MessageSquareText, ShieldAlert, ShieldCheck, Sparkles, Workflow } from 'lucide-react';
+import { Clipboard, FileCode2, History, LayoutDashboard, MessageSquareText, ShieldAlert, ShieldCheck, Sparkles, Workflow } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ChatPanel } from '../components/analysis/ChatPanel';
@@ -80,6 +80,12 @@ export default function Analysis() {
 
   return (
     <section className="analysis-dashboard-shell">
+      <div className="dashboard-breadcrumbs" aria-label="Breadcrumb">
+        <Link to="/workspace">Workspace</Link>
+        <span>/</span>
+        <span>{analysis.owner}/{analysis.repositoryName}</span>
+      </div>
+
       <DashboardOverview
         analysis={analysis}
         files={files}
@@ -92,29 +98,31 @@ export default function Analysis() {
 
       {copyMessage && <div className="copy-note dashboard-copy-note"><Clipboard size={16} /> {copyMessage}</div>}
 
-      <nav className="dashboard-tabs" aria-label="Analysis dashboard sections">
-        {dashboardTabs.map((tab) => (
-          <button key={tab.key} type="button" className={activeTab === tab.key ? 'active' : ''} onClick={() => setActiveTab(tab.key)}>
-            <tab.icon size={16} /> {tab.label}
-          </button>
-        ))}
-      </nav>
+      <div className="dashboard-main-grid">
+        <nav className="dashboard-tabs" aria-label="Analysis dashboard sections">
+          {dashboardTabs.map((tab) => (
+            <button key={tab.key} type="button" className={activeTab === tab.key ? 'active' : ''} onClick={() => setActiveTab(tab.key)}>
+              <tab.icon size={16} /> <span>{tab.label}</span>
+            </button>
+          ))}
+        </nav>
 
-      <div className="dashboard-tab-panel">
-        {activeTab === 'overview' && (
-          <>
-            <ScoreCards modules={modules} analysis={analysis} />
-            <ReadinessPanel analysis={analysis} onCopy={copyText} />
-          </>
-        )}
-        {activeTab === 'architecture' && <ReportSections analysis={analysis} onCopy={copyText} sections={reportSectionGroups.architecture} />}
-        {activeTab === 'security' && <ReportSections analysis={analysis} onCopy={copyText} sections={reportSectionGroups.security} />}
-        {activeTab === 'quality' && <ReportSections analysis={analysis} onCopy={copyText} sections={reportSectionGroups.quality} />}
-        {activeTab === 'findings' && <FindingsList findings={analysis.findings} onCopy={copyText} />}
-        {activeTab === 'files' && <FileInventory files={files} />}
-        {activeTab === 'coach' && <CoachPanel analysis={analysis} onCopy={copyText} />}
-        {activeTab === 'chat' && <ChatPanel chatMessages={chatMessages} isAsking={isAsking} onAsk={handleAsk} />}
-        {activeTab === 'history' && <HistoryPanel history={history} />}
+        <div className="dashboard-tab-panel">
+          {activeTab === 'overview' && (
+            <>
+              <ScoreCards modules={modules} analysis={analysis} />
+              <ReadinessPanel analysis={analysis} onCopy={copyText} />
+            </>
+          )}
+          {activeTab === 'architecture' && <ReportSections analysis={analysis} onCopy={copyText} sections={reportSectionGroups.architecture} />}
+          {activeTab === 'security' && <ReportSections analysis={analysis} onCopy={copyText} sections={reportSectionGroups.security} />}
+          {activeTab === 'quality' && <ReportSections analysis={analysis} onCopy={copyText} sections={reportSectionGroups.quality} />}
+          {activeTab === 'findings' && <FindingsList findings={analysis.findings} onCopy={copyText} />}
+          {activeTab === 'files' && <FileInventory files={files} />}
+          {activeTab === 'coach' && <CoachPanel analysis={analysis} onCopy={copyText} />}
+          {activeTab === 'chat' && <ChatPanel chatMessages={chatMessages} isAsking={isAsking} onAsk={handleAsk} />}
+          {activeTab === 'history' && <HistoryPanel history={history} />}
+        </div>
       </div>
     </section>
   );

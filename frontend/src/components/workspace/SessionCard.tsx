@@ -8,7 +8,7 @@ export const SessionCard = memo(function SessionCard({ user }: { user: AuthUser 
       <div className="section-heading">
         <KeyRound size={20} />
         <div>
-          <h2>Session</h2>
+          
           <p>{user.email}</p>
         </div>
       </div>
@@ -16,7 +16,7 @@ export const SessionCard = memo(function SessionCard({ user }: { user: AuthUser 
         <div className="avatar">{user.name.charAt(0).toUpperCase()}</div>
         <div>
           <strong>{user.name}</strong>
-          <span>JWT session stored locally</span>
+          
         </div>
       </div>
     </aside>
