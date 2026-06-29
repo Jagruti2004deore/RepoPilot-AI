@@ -1,4 +1,4 @@
-﻿import { GitBranch } from 'lucide-react';
+import { GitBranch, Inbox } from 'lucide-react';
 import { memo } from 'react';
 import type { RepositorySummary } from '../../types';
 
@@ -10,6 +10,16 @@ type RepositoryTableProps = {
 };
 
 export const RepositoryTable = memo(function RepositoryTable({ repositories, selectedRepoId, isBusy, onOpen }: RepositoryTableProps) {
+  if (repositories.length === 0) {
+    return (
+      <div className="repo-empty-state">
+        <Inbox size={22} />
+        <strong>No repositories imported yet</strong>
+        <span>Paste a public GitHub repository URL above to create your first analysis.</span>
+      </div>
+    );
+  }
+
   return (
     <div className="repo-table">
       <div className="table-head"><span>Repository</span><span>Status</span><span>Files</span><span>Score</span></div>

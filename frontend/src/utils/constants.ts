@@ -1,12 +1,10 @@
 import { Layers3, MessageSquareText, ShieldCheck, Sparkles } from 'lucide-react';
-import type { AnalysisScores, RepositorySummary } from '../types';
+import type { AnalysisScores } from '../types';
 
-export const GITHUB_URL = 'https://github.com/Jagruti2004deore/RepoLens-AI';
 export const STORAGE_KEYS = {
   token: 'repolens_token',
   user: 'repolens_user',
 } as const;
-
 export const defaultScores: AnalysisScores = {
   architecture: 82,
   security: 74,
@@ -15,21 +13,6 @@ export const defaultScores: AnalysisScores = {
   testing: 45,
   overall: 70,
 };
-
-export const defaultRepos: RepositorySummary[] = [
-  {
-    id: 1,
-    githubUrl: GITHUB_URL,
-    owner: 'Jagruti2004deore',
-    name: 'RepoLens-AI',
-    status: 'LOCAL_PREVIEW',
-    defaultBranch: 'main',
-    importedFileCount: 0,
-    scores: defaultScores,
-    importedAt: new Date().toISOString(),
-  },
-];
-
 export const serviceCards = [
   {
     title: 'Architecture Review',

@@ -1,4 +1,4 @@
-﻿import { ArrowRight, Bot, GitBranch } from 'lucide-react';
+import { ArrowRight, Bot, GitBranch } from 'lucide-react';
 import { memo, useState } from 'react';
 import type { FormEvent } from 'react';
 
@@ -9,7 +9,7 @@ type RepositoryFormProps = {
 };
 
 export const RepositoryForm = memo(function RepositoryForm({ isBusy, message, onAnalyze }: RepositoryFormProps) {
-  const [githubUrl, setGithubUrl] = useState('https://github.com/Jagruti2004deore/RepoLens-AI');
+  const [githubUrl, setGithubUrl] = useState('');
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -22,12 +22,12 @@ export const RepositoryForm = memo(function RepositoryForm({ isBusy, message, on
         <GitBranch size={22} />
         <div>
           <h2>Repository Analysis</h2>
-          <p>Paste a public GitHub URL to generate a review.</p>
+          <p>Paste any public GitHub repository URL to generate a review.</p>
         </div>
       </div>
       <form className="repo-form" onSubmit={handleSubmit}>
         <input value={githubUrl} onChange={(event) => setGithubUrl(event.target.value)} placeholder="https://github.com/owner/repository" />
-        <button type="submit" disabled={isBusy}>Analyze <ArrowRight size={17} /></button>
+        <button type="submit" disabled={isBusy || !githubUrl.trim()}>Analyze <ArrowRight size={17} /></button>
       </form>
       <div className="message-line"><Bot size={17} /> {message}</div>
     </>

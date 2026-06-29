@@ -3828,3 +3828,26 @@ input:focus, select:focus {
   .user-bubble span, .ai-message-body, .loading-bubble .thinking-line { max-width: 94%; }
   .file-row, .history-row, .repo-row, .table-head { grid-template-columns: 1fr; }
 }
+
+.repo-empty-state {
+  min-height: 168px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  padding: 24px;
+  border: 1px dashed rgba(148, 163, 184, 0.26);
+  border-radius: var(--rp-radius);
+  color: var(--rp-muted);
+  background: rgba(15, 23, 42, 0.42);
+  text-align: center;
+}
+
+.repo-empty-state strong {
+  color: var(--rp-text);
+  font-size: 18px;
+}
+
+.repo-empty-state svg {
+  color: var(--rp-cyan);
+}

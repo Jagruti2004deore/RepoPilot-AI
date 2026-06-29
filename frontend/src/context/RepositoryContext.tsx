@@ -1,4 +1,4 @@
-﻿import { createContext, useCallback, useMemo, useState } from 'react';
+import { createContext, useCallback, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import {
   askRepoQuestion,
@@ -11,7 +11,6 @@ import {
   reanalyzeRepository,
 } from '../services/repositoryService';
 import type { AnalysisHistoryItem, AnalysisReport, RepoChatMessage, RepositoryFileSummary, RepositorySummary } from '../types';
-import { defaultRepos } from '../utils/constants';
 import { apiStatus, errorMessage } from '../utils/helpers';
 
 export type RepositoryContextValue = {
@@ -36,7 +35,7 @@ export type RepositoryContextValue = {
 export const RepositoryContext = createContext<RepositoryContextValue | null>(null);
 
 export function RepositoryProvider({ children }: { children: ReactNode }) {
-  const [repositories, setRepositories] = useState<RepositorySummary[]>(defaultRepos);
+  const [repositories, setRepositories] = useState<RepositorySummary[]>([]);
   const [selectedRepoId, setSelectedRepoId] = useState<number | null>(null);
   const [analysis, setAnalysis] = useState<AnalysisReport | null>(null);
   const [history, setHistory] = useState<AnalysisHistoryItem[]>([]);
@@ -117,7 +116,7 @@ export function RepositoryProvider({ children }: { children: ReactNode }) {
           }
         }
       } catch (error) {
-        setMessage(errorMessage(error, 'Backend session is not available yet. You can still view the local dashboard preview.'));
+        setMessage(errorMessage(error, 'Backend session is not available yet. Please try again in a moment.'));
       }
     },
     [loadAnalysis],
@@ -185,13 +184,13 @@ export function RepositoryProvider({ children }: { children: ReactNode }) {
   );
 
   const resetWorkspace = useCallback(() => {
-    setRepositories(defaultRepos);
+    setRepositories([]);
     setSelectedRepoId(null);
     setAnalysis(null);
     setHistory([]);
     setFiles([]);
     setChatMessages([]);
-    setMessage('Signed out locally.');
+    setMessage('You are signed out. Sign in again to import and review repositories.');
   }, []);
 
   const value = useMemo(

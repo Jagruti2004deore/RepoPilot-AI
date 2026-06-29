@@ -1,8 +1,7 @@
-import { ChevronDown, GitBranch, LogOut, Radar, UserRound } from 'lucide-react';
+import { ChevronDown, LogOut, Radar, UserRound } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useRepositories } from '../../hooks/useRepositories';
-import { GITHUB_URL } from '../../utils/constants';
 
 export function Navbar() {
   const navigate = useNavigate();
@@ -26,7 +25,6 @@ export function Navbar() {
       <div className="topbar-actions">
         <a href="/#services">Services</a>
         <a href="/#how-it-works">How it works</a>
-        <a href={GITHUB_URL} target="_blank" rel="noreferrer"><GitBranch size={17} /> GitHub</a>
         {user ? (
           <>
             <Link className={isWorkspace ? 'active-link' : ''} to="/workspace">Workspace</Link>
