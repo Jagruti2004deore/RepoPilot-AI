@@ -2,6 +2,7 @@ import { ChevronDown, LogOut, Radar, UserRound } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useRepositories } from '../../hooks/useRepositories';
+import { ThemeToggle } from './ThemeToggle';
 
 export function Navbar() {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ export function Navbar() {
       <div className="topbar-actions">
         <a href="/#services">Services</a>
         <a href="/#how-it-works">How it works</a>
+        <ThemeToggle />
         {user ? (
           <>
             <Link className={isWorkspace ? 'active-link' : ''} to="/workspace">Workspace</Link>
