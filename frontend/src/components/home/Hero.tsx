@@ -10,7 +10,7 @@ export function Hero() {
       <div className="hero-grid">
         <div className="hero-copy">
           <div className="eyebrow"><Sparkles size={16} /> GitHub code review, project readiness, and repo Q&amp;A</div>
-          <h1>Ship a portfolio project that reads like production code.</h1>
+          <h2>Ship a portfolio project that reads like production code.</h2>
           <p>
             Import a GitHub repository, review architecture and security, generate interview-ready guidance, and ask questions about the actual codebase.
           </p>
