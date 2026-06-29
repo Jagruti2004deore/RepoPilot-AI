@@ -3851,3 +3851,586 @@ input:focus, select:focus {
 .repo-empty-state svg {
   color: var(--rp-cyan);
 }
+/* RepoPilot AI light coder OS refresh */
+:root {
+  color-scheme: light;
+  --rp-bg: #f6f9fc;
+  --rp-bg-soft: #eef7f7;
+  --rp-panel: rgba(255, 255, 255, 0.86);
+  --rp-panel-solid: #ffffff;
+  --rp-panel-raised: #ffffff;
+  --rp-line: rgba(15, 23, 42, 0.1);
+  --rp-line-strong: rgba(37, 99, 235, 0.2);
+  --rp-text: #0f172a;
+  --rp-muted: #526179;
+  --rp-faint: #8190a6;
+  --rp-blue: #2563eb;
+  --rp-cyan: #0891b2;
+  --rp-green: #059669;
+  --rp-yellow: #b7791f;
+  --rp-red: #dc2626;
+  --rp-violet: #7c3aed;
+  --rp-shadow: 0 22px 60px rgba(15, 23, 42, 0.11);
+  --rp-soft-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+  --rp-radius: 18px;
+  --rp-radius-sm: 12px;
+}
+
+html {
+  background: var(--rp-bg);
+}
+
+body {
+  color: var(--rp-text);
+  background:
+    radial-gradient(circle at 18% 10%, rgba(34, 211, 238, 0.16), transparent 34%),
+    radial-gradient(circle at 84% 18%, rgba(37, 99, 235, 0.12), transparent 30%),
+    linear-gradient(180deg, #fbfdff 0%, #f4f8fc 46%, #eef7f4 100%);
+}
+
+body::before {
+  opacity: 0.72;
+  background-image:
+    linear-gradient(rgba(37, 99, 235, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(8, 145, 178, 0.055) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.72), transparent 82%);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: auto 0 0 0;
+  height: 44vh;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.7));
+  z-index: -1;
+}
+
+.app-shell,
+.site-shell,
+.auth-page,
+.workspace-page,
+.analysis-page,
+.workspace,
+.report-band,
+.milestone-band,
+.analysis-dashboard-shell {
+  color: var(--rp-text);
+}
+
+.site-shell,
+.app-shell,
+.auth-page,
+.workspace-page,
+.analysis-page {
+  background: transparent !important;
+}
+
+.topbar {
+  background: rgba(255, 255, 255, 0.84) !important;
+  border: 1px solid rgba(37, 99, 235, 0.13) !important;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.12) !important;
+  backdrop-filter: blur(22px) saturate(145%);
+}
+
+.brand-lockup span,
+.topbar-actions a,
+.topbar-actions summary,
+.profile-popover span,
+.section-heading h2,
+.section-heading-large h2,
+.hero-copy h1,
+.dashboard-title-block h1,
+.report-card h3,
+.service-card h3,
+.workflow-copy h2,
+.auth-card h1,
+.auth-card h2,
+.analysis-panel h2,
+.dashboard-tab-panel h3,
+.chat-header h3,
+.coach-card h3,
+.findings-dashboard h3,
+.file-inventory h3,
+.history-panel h3 {
+  color: var(--rp-text) !important;
+}
+
+.brand-mark,
+.service-icon,
+.section-heading svg,
+.section-kicker svg,
+.dashboard-breadcrumbs svg,
+.repo-empty-state svg,
+.empty-chat svg,
+.empty-dashboard-state svg {
+  color: var(--rp-blue) !important;
+  background: linear-gradient(135deg, #e0f2fe, #dcfce7) !important;
+  border-color: rgba(37, 99, 235, 0.16) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.72), 0 12px 30px rgba(37, 99, 235, 0.12);
+}
+
+.topbar-actions a,
+.topbar-actions summary,
+.secondary-action,
+.dashboard-actions button,
+.chat-toolbar button,
+.message-copy,
+.copy-button,
+.report-actions button,
+.coach-action-row button,
+.workflow-controls button,
+.file-toolbar select,
+.file-toolbar input,
+.segmented button {
+  color: #24324a !important;
+  background: rgba(255, 255, 255, 0.72) !important;
+  border: 1px solid rgba(15, 23, 42, 0.1) !important;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+}
+
+.topbar-actions a:hover,
+.topbar-actions summary:hover,
+.secondary-action:hover,
+.dashboard-actions button:hover,
+.chat-toolbar button:hover,
+.message-copy:hover,
+.copy-button:hover,
+.workflow-controls button:hover,
+.file-toolbar select:hover,
+.file-toolbar input:hover,
+.segmented button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(37, 99, 235, 0.28) !important;
+  box-shadow: 0 14px 34px rgba(37, 99, 235, 0.12);
+}
+
+.nav-primary,
+.primary-action,
+.repo-form button,
+.auth-card form button,
+.chat-form button,
+.coach-action-row .primary-action,
+.dashboard-actions .primary-action,
+.segmented button.active,
+.topbar-actions .active-link {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #2563eb, #0891b2 55%, #059669) !important;
+  border-color: rgba(8, 145, 178, 0.28) !important;
+  box-shadow: 0 18px 34px rgba(37, 99, 235, 0.22) !important;
+}
+
+.repo-form button:disabled,
+.auth-card form button:disabled,
+.chat-form button:disabled {
+  color: #94a3b8 !important;
+  background: #e5edf5 !important;
+  box-shadow: none !important;
+  cursor: not-allowed;
+}
+
+.hero-band,
+.services-section,
+.how-section,
+.analysis-panel,
+.auth-card,
+.signed-in,
+.report-card,
+.summary-card,
+.mini-chart,
+.dashboard-tab-panel,
+.readiness-card,
+.readiness-panel,
+.score-orb-card,
+.finding-card,
+.severity-group,
+.file-inventory,
+.file-toolbar,
+.file-tree,
+.coach-card,
+.coach-tile,
+.repo-chat-panel,
+.history-panel,
+.trend-chart-card,
+.empty-analysis,
+.empty-dashboard-state,
+.repo-empty-state,
+.profile-popover,
+.workflow-card,
+.interactive-workflow,
+.pipeline-step,
+.service-card,
+.dashboard-hero,
+.dashboard-tabs,
+.source-badges span,
+.history-row,
+.repo-row,
+.table-head,
+.message-line,
+.copy-note {
+  background: var(--rp-panel) !important;
+  border-color: var(--rp-line) !important;
+  color: var(--rp-text) !important;
+  box-shadow: var(--rp-soft-shadow);
+  backdrop-filter: blur(18px) saturate(135%);
+}
+
+.hero-band,
+.services-section,
+.how-section,
+.auth-card,
+.analysis-panel,
+.dashboard-hero,
+.dashboard-tab-panel,
+.repo-chat-panel,
+.history-panel,
+.file-inventory,
+.coach-card {
+  box-shadow: var(--rp-shadow);
+}
+
+.hero-band {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(236, 253, 245, 0.72)),
+    linear-gradient(90deg, rgba(37, 99, 235, 0.04) 1px, transparent 1px),
+    linear-gradient(rgba(8, 145, 178, 0.04) 1px, transparent 1px) !important;
+  background-size: auto, 28px 28px, 28px 28px !important;
+}
+
+.hero-copy p,
+.workflow-copy p,
+.service-card p,
+.section-heading p,
+.section-heading-large p,
+.auth-card p,
+.analysis-panel p,
+.dashboard-title-block p,
+.summary-card small,
+.mini-chart small,
+.score-card-content p,
+.coach-tile small,
+.finding-card p,
+.history-row span,
+.file-row span,
+.message-line,
+.empty-chat,
+.empty-dashboard-state,
+.repo-empty-state,
+.copy-note,
+.profile-popover span {
+  color: var(--rp-muted) !important;
+}
+
+.section-kicker,
+.dashboard-breadcrumbs,
+.feature-pill,
+.status-badge,
+.source-badges span,
+.file-language,
+.severity-badge,
+.score-level,
+.copy-note {
+  color: #155e75 !important;
+  background: #ecfeff !important;
+  border-color: rgba(8, 145, 178, 0.16) !important;
+}
+
+.coder-console,
+.workflow-terminal,
+.chat-code-block,
+.report-card pre,
+.coach-card pre,
+.analysis-code-block,
+.code-window {
+  color: #dbeafe !important;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.94)),
+    radial-gradient(circle at 20% 0%, rgba(34, 211, 238, 0.16), transparent 36%) !important;
+  border: 1px solid rgba(15, 23, 42, 0.18) !important;
+  box-shadow: 0 22px 48px rgba(15, 23, 42, 0.18);
+}
+
+.coder-console code,
+.workflow-terminal code,
+.chat-code-block code,
+.report-card pre,
+.coach-card pre {
+  color: #dbeafe !important;
+}
+
+.console-dots span:nth-child(1) { background: #22c55e !important; }
+.console-dots span:nth-child(2) { background: #facc15 !important; }
+.console-dots span:nth-child(3) { background: #60a5fa !important; }
+
+input,
+textarea,
+select,
+.repo-form input,
+.chat-form input,
+.stack-form input,
+.file-toolbar input,
+.file-toolbar select {
+  color: var(--rp-text) !important;
+  background: rgba(255, 255, 255, 0.86) !important;
+  border: 1px solid rgba(15, 23, 42, 0.12) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 3px solid rgba(37, 99, 235, 0.16) !important;
+  border-color: rgba(37, 99, 235, 0.42) !important;
+}
+
+.service-card,
+.pipeline-step,
+.summary-card,
+.score-orb-card,
+.finding-card,
+.file-row,
+.history-row,
+.coach-tile,
+.repo-row {
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.service-card:hover,
+.pipeline-step:hover,
+.summary-card:hover,
+.score-orb-card:hover,
+.finding-card:hover,
+.file-row:hover,
+.history-row:hover,
+.coach-tile:hover,
+.repo-row:hover {
+  transform: translateY(-3px);
+  border-color: rgba(37, 99, 235, 0.2) !important;
+  box-shadow: 0 22px 48px rgba(37, 99, 235, 0.13);
+}
+
+.service-card::after,
+.summary-card::after,
+.score-orb-card::after,
+.finding-card::after,
+.coach-tile::after {
+  background: linear-gradient(90deg, #2563eb, #06b6d4, #10b981) !important;
+  opacity: 0.78;
+}
+
+.dashboard-tabs {
+  background: rgba(255, 255, 255, 0.76) !important;
+}
+
+.dashboard-tabs button {
+  color: #526179 !important;
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+.dashboard-tabs button.active,
+.dashboard-tabs button:hover {
+  color: #0f172a !important;
+  background: #eef6ff !important;
+  border-color: rgba(37, 99, 235, 0.16) !important;
+}
+
+.dashboard-summary-grid .summary-card:nth-child(1),
+.dashboard-score-grid .score-orb-card:nth-child(1) {
+  background: linear-gradient(135deg, #ffffff, #eff6ff) !important;
+}
+
+.dashboard-summary-grid .summary-card:nth-child(2),
+.dashboard-score-grid .score-orb-card:nth-child(2) {
+  background: linear-gradient(135deg, #ffffff, #ecfdf5) !important;
+}
+
+.dashboard-summary-grid .summary-card:nth-child(3),
+.dashboard-score-grid .score-orb-card:nth-child(3) {
+  background: linear-gradient(135deg, #ffffff, #f5f3ff) !important;
+}
+
+.dashboard-summary-grid .summary-card:nth-child(4),
+.dashboard-score-grid .score-orb-card:nth-child(4) {
+  background: linear-gradient(135deg, #ffffff, #fff7ed) !important;
+}
+
+.score-orb,
+.readiness-circle {
+  filter: drop-shadow(0 18px 24px rgba(37, 99, 235, 0.12));
+}
+
+.score-orb span,
+.readiness-circle span,
+.readiness-circle strong {
+  color: var(--rp-text) !important;
+  background: #ffffff !important;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06), 0 14px 30px rgba(15, 23, 42, 0.08);
+}
+
+.progress-track,
+.workflow-progress,
+.trend-bars,
+.language-bars,
+.metric-track {
+  background: #e8eef5 !important;
+}
+
+.progress-track span,
+.workflow-progress span,
+.metric-track span,
+.trend-bars span {
+  background: linear-gradient(90deg, #2563eb, #06b6d4, #10b981) !important;
+}
+
+.score-green,
+.good,
+.status-success,
+.delta-positive {
+  color: #047857 !important;
+}
+
+.score-yellow,
+.warning,
+.delta-neutral {
+  color: #a16207 !important;
+}
+
+.score-red,
+.danger,
+.delta-negative {
+  color: #dc2626 !important;
+}
+
+.severity-high,
+.severity-critical {
+  color: #991b1b !important;
+  background: #fef2f2 !important;
+  border-color: rgba(220, 38, 38, 0.18) !important;
+}
+
+.severity-medium {
+  color: #92400e !important;
+  background: #fffbeb !important;
+  border-color: rgba(180, 83, 9, 0.2) !important;
+}
+
+.severity-low {
+  color: #065f46 !important;
+  background: #ecfdf5 !important;
+  border-color: rgba(5, 150, 105, 0.18) !important;
+}
+
+.chat-list {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.78)),
+    linear-gradient(90deg, rgba(37, 99, 235, 0.04) 1px, transparent 1px),
+    linear-gradient(rgba(8, 145, 178, 0.04) 1px, transparent 1px) !important;
+  background-size: auto, 30px 30px, 30px 30px !important;
+  border-color: var(--rp-line) !important;
+}
+
+.ai-message-body,
+.loading-bubble .thinking-line {
+  color: var(--rp-text) !important;
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.1) !important;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.07);
+}
+
+.user-bubble span {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #2563eb, #0891b2) !important;
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.18);
+}
+
+.markdown-lite {
+  color: var(--rp-text) !important;
+}
+
+.markdown-heading,
+.markdown-lite strong {
+  color: #0f172a !important;
+}
+
+.suggestion-chips button {
+  color: #155e75 !important;
+  background: #ecfeff !important;
+  border: 1px solid rgba(8, 145, 178, 0.18) !important;
+}
+
+.suggestion-chips button:hover {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #2563eb, #0891b2) !important;
+  transform: translateY(-1px);
+}
+
+.table-head {
+  color: #64748b !important;
+  background: rgba(248, 250, 252, 0.9) !important;
+  box-shadow: none;
+}
+
+.repo-row,
+.file-row,
+.history-row {
+  background: #ffffff !important;
+}
+
+.repo-row.active,
+.file-row.active,
+.pipeline-step.active,
+.coach-tile.active {
+  background: linear-gradient(135deg, #eff6ff, #ecfeff) !important;
+  border-color: rgba(37, 99, 235, 0.24) !important;
+}
+
+.repo-form,
+.chat-form,
+.stack-form {
+  gap: 12px;
+}
+
+.message-line {
+  background: #f0f9ff !important;
+  color: #155e75 !important;
+}
+
+.copy-note {
+  background: #ecfdf5 !important;
+  color: #047857 !important;
+}
+
+.profile-popover button {
+  color: #dc2626 !important;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(226, 232, 240, 0.72) !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.44) !important;
+  border: 2px solid rgba(226, 232, 240, 0.72) !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(37, 99, 235, 0.5) !important;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-copy h1,
+  .coder-console,
+  .service-card,
+  .analysis-panel,
+  .dashboard-hero,
+  .dashboard-tab-panel {
+    animation: fadeInUp 420ms ease both;
+  }
+}
